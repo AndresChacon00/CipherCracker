@@ -34,6 +34,21 @@ unordered_map<char, char> readKeyFromJSON(const string& f) {
     return keyMap;
 }
 
+string monoalphabeticCipher(unordered_map<char, char> keyMap ,string originalText) {
+    string cipherText ="";
+    for (char c : originalText) {
+        char lower = tolower(c);
+        if (keyMap.find(lower) != keyMap.end()) {
+            char cipher = keyMap.at(lower);
+            cipherText += isupper(c) ? toupper(cipher) : cipher;
+        } else {
+            cipherText += c;
+        }
+    }
+    return cipherText;
+}
+
+
 int main() {
 
     auto keyMap = readKeyFromJSON("key.json");
@@ -43,16 +58,6 @@ int main() {
 
     // Ejemplo de cifrado
     string texto = "Hola mundo";
-    string textoCifrado ="";
-    for (char c : texto) {
-        char lower = tolower(c);
-        if (keyMap.find(lower) != keyMap.end()) {
-            char cifrado = keyMap.at(lower);
-            textoCifrado += isupper(c) ? toupper(cifrado) : cifrado;
-        } else {
-            textoCifrado += c;
-        }
-    }
+    cout << monoalphabeticCipher(keyMap, texto);
 
-    cout << "Texto cifrado: "<< textoCifrado << endl;
 }

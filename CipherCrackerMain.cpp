@@ -1,19 +1,51 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <unordered_map>
 #include <regex>
+#include <vector>
+
+#define ALPHABET_SIZE 26
+#define LETTER_TO_INT(c) c - 'a'
+#define INT_TO_LETTER(i) i + 'a'
 
 using namespace std;
+
+char BASE_ALPHABET[] = {
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z'};
 
 /**
  * Lee la clave de encriptación a partir de un archivo JSON
  * @param f Ruta del archivo
  */
-unordered_map<char, char> readKeyFromJSON(const string &f)
+vector<char> readKeyFromJSON(const string &f)
 {
     ifstream file(f);
-    unordered_map<char, char> keyMap;
+    vector<char> keyMap(ALPHABET_SIZE);
 
     if (!file.is_open())
     {
@@ -32,9 +64,14 @@ unordered_map<char, char> readKeyFromJSON(const string &f)
         {
             if (match.size() == 3)
             {
+                // Read mapping
                 char key = match[1].str()[0];
                 char value = match[2].str()[0];
-                keyMap[key] = value;
+                key = tolower(key);
+
+                // Add to key map
+                int pos = LETTER_TO_INT(key);
+                keyMap[pos] = tolower(value);
             }
         }
     }
@@ -48,15 +85,16 @@ unordered_map<char, char> readKeyFromJSON(const string &f)
  * @param keyMap Clave de cifrado
  * @param originalText Texto a cifrar
  */
-string monoalphabeticCipher(unordered_map<char, char> keyMap, string originalText)
+string monoalphabeticCipher(vector<char> &keyMap, const string &originalText)
 {
     string cipherText = "";
     for (char c : originalText)
     {
         char lower = tolower(c);
-        if (keyMap.find(lower) != keyMap.end())
+        int pos = LETTER_TO_INT(lower);
+        if (keyMap.size() > pos)
         {
-            char cipher = keyMap.at(lower);
+            char cipher = keyMap.at(pos);
             cipherText += isupper(c) ? toupper(cipher) : cipher;
         }
         else
@@ -72,23 +110,28 @@ string monoalphabeticCipher(unordered_map<char, char> keyMap, string originalTex
  * @param keyMap Clave de cifrado
  * @param cipheredText Texto a descifrar
  */
-string monoalphabeticDecipher(unordered_map<char, char> keyMap, string cipheredText)
+string monoalphabeticDecipher(vector<char> &keyMap, const string &cipheredText)
 {
     // Create an inverse map of the key
-    unordered_map<char, char> inverseKeyMap;
-    for (const auto &pair : keyMap)
+    vector<char> inverseKeyMap(keyMap.size());
+    for (int i = 0; i < keyMap.size(); i++)
     {
-        inverseKeyMap[pair.second] = pair.first;
+        // Example: keyMap[3] = 'a' means inverseKeyMap[0] = 'd'
+        char c = keyMap[i];
+        char letterInInverse = INT_TO_LETTER(i);
+        int posInInverse = LETTER_TO_INT(c);
+        inverseKeyMap[posInInverse] = letterInInverse;
     }
 
-    // Descipher with inverseKeyMap
+    // Decipher with inverseKeyMap
     string originalText = "";
     for (char c : cipheredText)
     {
         char lower = tolower(c);
-        if (inverseKeyMap.find(lower) != inverseKeyMap.end())
+        int pos = LETTER_TO_INT(lower);
+        if (inverseKeyMap.size() > pos)
         {
-            char cipher = inverseKeyMap.at(lower);
+            char cipher = inverseKeyMap.at(pos);
             originalText += isupper(c) ? toupper(cipher) : cipher;
         }
         else
@@ -102,15 +145,15 @@ string monoalphabeticDecipher(unordered_map<char, char> keyMap, string cipheredT
 int main()
 {
     auto keyMap = readKeyFromJSON("key.json");
-    for (const auto &pair : keyMap)
+    for (int i = 0; i < keyMap.size(); i++)
     {
-        cout << pair.first << " -> " << pair.second << endl;
+        cout << INT_TO_LETTER(i) << " -> " << keyMap[i] << '\n';
     }
 
     // Ejemplo de cifrado
     string texto = "Hola mundo";
     string textoCifrado = monoalphabeticCipher(keyMap, texto);
     string textoDescifrado = monoalphabeticDecipher(keyMap, textoCifrado);
-    cout << "Texto cifrado: " << textoCifrado << endl;
-    cout << "Texto descifrado: " << textoDescifrado << endl;
+    cout << "Texto cifrado: " << textoCifrado << '\n';
+    cout << "Texto descifrado: " << textoDescifrado << '\n';
 }

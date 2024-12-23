@@ -3,6 +3,11 @@
 #include <string>
 #include <regex>
 #include <vector>
+#include <algorithm>
+#include <mutex>
+#include <thread>
+#include <future>
+#include <unordered_set>
 
 #define ALPHABET_SIZE 26
 #define LETTER_TO_INT(c) c - 'a'
@@ -10,33 +15,7 @@
 
 using namespace std;
 
-char BASE_ALPHABET[] = {
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'g',
-    'h',
-    'i',
-    'j',
-    'k',
-    'l',
-    'm',
-    'n',
-    'o',
-    'p',
-    'q',
-    'r',
-    's',
-    't',
-    'u',
-    'v',
-    'w',
-    'x',
-    'y',
-    'z'};
+const string BASE_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
 /**
  * Lee la clave de encriptación a partir de un archivo JSON
@@ -142,18 +121,111 @@ string monoalphabeticDecipher(vector<char> &keyMap, const string &cipheredText)
     return originalText;
 }
 
-int main()
+/**
+ * Decifra un texto utilizando fuerza bruta, requiere una palabra pista
+ * @param cipheredText Texto a descifrar
+ * @param clueWord Palabra pista incluida en el texto
+ */
+string bruteForceDecipherWithClue(const string &cipheredText, const string &clueWord)
 {
-    auto keyMap = readKeyFromJSON("key.json");
-    for (int i = 0; i < keyMap.size(); i++)
+    // Convert to lowercase
+    string lowerCipheredText = cipheredText;
+    string lowerClueWord = clueWord;
+    transform(lowerCipheredText.begin(), lowerCipheredText.end(), lowerCipheredText.begin(), ::tolower);
+    transform(lowerClueWord.begin(), lowerClueWord.end(), lowerClueWord.begin(), ::tolower);
+
+    // Find all unique ciphered words of the same length as clueWord
+    unordered_set<string> uniqueWords;
+    regex wordRegex("\\b\\w{" + to_string(clueWord.size()) + "}\\b");
+    auto wordsBegin = sregex_iterator(lowerCipheredText.begin(), lowerCipheredText.end(), wordRegex);
+    auto wordsEnd = sregex_iterator();
+
+    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
     {
-        cout << INT_TO_LETTER(i) << " -> " << keyMap[i] << '\n';
+        uniqueWords.insert((*i).str());
     }
 
+    mutex mtx;
+    string result = "";
+    const size_t numThreads = thread::hardware_concurrency();
+    vector<future<void>> futures;
+
+    auto worker = [&](const string &word)
+    {
+        string alphabet = BASE_ALPHABET;
+        do
+        {
+            vector<char> keyMap(ALPHABET_SIZE, 0);
+            bool valid = true;
+            for (size_t i = 0; i < word.size(); ++i)
+            {
+                char c = word[i];
+                char clue = lowerClueWord[i];
+                if (keyMap[LETTER_TO_INT(clue)] == 0)
+                {
+                    keyMap[LETTER_TO_INT(clue)] = c;
+                }
+                else if (keyMap[LETTER_TO_INT(clue)] != c)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid)
+            {
+                string decipheredText = monoalphabeticDecipher(keyMap, lowerCipheredText);
+                if (decipheredText.find(lowerClueWord) != string::npos)
+                {
+                    lock_guard<mutex> lock(mtx);
+                    if (result.empty())
+                    {
+                        result = decipheredText;
+                        cout << "Deciphered Text: " << result << endl;
+                    }
+                }
+            }
+        } while (next_permutation(alphabet.begin(), alphabet.end()));
+    };
+
+    for (const auto &word : uniqueWords)
+    {
+        if (futures.size() >= numThreads)
+        {
+            for (auto &fut : futures)
+            {
+                fut.get();
+            }
+            futures.clear();
+        }
+        futures.push_back(async(launch::async, worker, word));
+    }
+
+    for (auto &fut : futures)
+    {
+        fut.get();
+    }
+
+    return "";
+}
+
+int main()
+{
+    // auto keyMap = readKeyFromJSON("key.json");
+    // for (int i = 0; i < keyMap.size(); i++)
+    // {
+    //     cout << INT_TO_LETTER(i) << " -> " << keyMap[i] << '\n';
+    // }
+
     // Ejemplo de cifrado
-    string texto = "Hola mundo";
-    string textoCifrado = monoalphabeticCipher(keyMap, texto);
-    string textoDescifrado = monoalphabeticDecipher(keyMap, textoCifrado);
-    cout << "Texto cifrado: " << textoCifrado << '\n';
-    cout << "Texto descifrado: " << textoDescifrado << '\n';
+    // string texto = "Hola mundo";
+    // string textoCifrado = monoalphabeticCipher(keyMap, texto);
+    // string textoDescifrado = monoalphabeticDecipher(keyMap, textoCifrado);
+    // cout << "Texto cifrado: " << textoCifrado << '\n';
+    // cout << "Texto descifrado: " << textoDescifrado << '\n';
+
+    string input = "DXCY WQ CCYWX HXWQC IGCLY O WQ UJIKY SJUYH ZHYNC IKYHI";
+    string clueWord = "BRAWL";
+    bruteForceDecipherWithClue(input, clueWord);
+    // cout << "Salida: " << bruteForceDecipherWithClue(input, clueWord) << '\n';
+    return 0;
 }

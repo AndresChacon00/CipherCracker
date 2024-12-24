@@ -10,8 +10,8 @@
 #include <unordered_set>
 
 #define ALPHABET_SIZE 26
-#define LETTER_TO_INT(c) c - 'a'
-#define INT_TO_LETTER(i) i + 'a'
+#define LETTER_TO_INT(c) (int)(c - 'a')
+#define INT_TO_LETTER(i) (char)(i + 'a')
 
 using namespace std;
 
@@ -57,6 +57,18 @@ vector<char> readKeyFromJSON(const string &f)
 
     file.close();
     return keyMap;
+}
+
+/**
+ * Muestra la clave de descifrado en pantalla
+ * @param keyMap La clave de cifrado a mostrar
+ */
+void printKeyMap(vector<char> &keyMap)
+{
+    for (int i = 0; i < keyMap.size(); i++)
+    {
+        cout << INT_TO_LETTER(i) << ":" << keyMap[i] << "; ";
+    }
 }
 
 /**
@@ -142,67 +154,54 @@ string bruteForceDecipherWithClue(const string &cipheredText, const string &clue
 
     for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
     {
-        uniqueWords.insert((*i).str());
-    }
-
-    mutex mtx;
-    string result = "";
-    const size_t numThreads = thread::hardware_concurrency();
-    vector<future<void>> futures;
-
-    auto worker = [&](const string &word)
-    {
-        string alphabet = BASE_ALPHABET;
-        do
+        // Check that the word is not in uniqueWords
+        string cipheredWord = (*i).str();
+        if (uniqueWords.find(cipheredWord) == uniqueWords.end())
         {
-            vector<char> keyMap(ALPHABET_SIZE, 0);
-            bool valid = true;
-            for (size_t i = 0; i < word.size(); ++i)
+            uniqueWords.insert((*i).str());
+
+            // Create copy of base alphabet but remove all letters from cipheredWord
+            string alphabetCopy = BASE_ALPHABET;
+            for (char c : cipheredWord)
             {
-                char c = word[i];
-                char clue = lowerClueWord[i];
-                if (keyMap[LETTER_TO_INT(clue)] == 0)
-                {
-                    keyMap[LETTER_TO_INT(clue)] = c;
-                }
-                else if (keyMap[LETTER_TO_INT(clue)] != c)
-                {
-                    valid = false;
-                    break;
-                }
+                alphabetCopy.erase(remove(alphabetCopy.begin(), alphabetCopy.end(), c), alphabetCopy.end());
             }
-            if (valid)
+            cout << "Alphabet: " << alphabetCopy << "; cipheredWord: " << cipheredWord << '\n';
+
+            // Generate all permutations of alphabet
+            vector<char> keyMap(ALPHABET_SIZE, 0);
+            for (int i = 0; i < clueWord.size(); i++)
             {
-                string decipheredText = monoalphabeticDecipher(keyMap, lowerCipheredText);
-                if (decipheredText.find(lowerClueWord) != string::npos)
+                keyMap[LETTER_TO_INT(lowerClueWord[i])] = cipheredWord[i];
+            }
+
+            do
+            {
+                // Generate keyMap with clueWord constraint
+                int alphabetPos = 0;
+                for (int i = 0; i < ALPHABET_SIZE; i++)
                 {
-                    lock_guard<mutex> lock(mtx);
-                    if (result.empty())
+                    bool shouldAdd = true;
+                    for (char c : lowerClueWord)
                     {
-                        result = decipheredText;
-                        cout << "Deciphered Text: " << result << endl;
+                        if (LETTER_TO_INT(c) == i)
+                        {
+                            shouldAdd = false;
+                            break;
+                        }
+                    }
+                    if (shouldAdd)
+                    {
+                        keyMap[i] = alphabetCopy[alphabetPos++];
                     }
                 }
-            }
-        } while (next_permutation(alphabet.begin(), alphabet.end()));
-    };
 
-    for (const auto &word : uniqueWords)
-    {
-        if (futures.size() >= numThreads)
-        {
-            for (auto &fut : futures)
-            {
-                fut.get();
-            }
-            futures.clear();
+                // Test decipher
+                cout << monoalphabeticDecipher(keyMap, cipheredText) << " // ";
+                printKeyMap(keyMap);
+                cout << '\n';
+            } while (next_permutation(alphabetCopy.begin(), alphabetCopy.end()));
         }
-        futures.push_back(async(launch::async, worker, word));
-    }
-
-    for (auto &fut : futures)
-    {
-        fut.get();
     }
 
     return "";
@@ -223,8 +222,8 @@ int main()
     // cout << "Texto cifrado: " << textoCifrado << '\n';
     // cout << "Texto descifrado: " << textoDescifrado << '\n';
 
-    string input = "DXCY WQ CCYWX HXWQC IGCLY O WQ UJIKY SJUYH ZHYNC IKYHI";
-    string clueWord = "BRAWL";
+    string input = "VIRFW EIXYW VD UUAVW JWVDU QJAMUSW";
+    string clueWord = "BRAWLIO";
     bruteForceDecipherWithClue(input, clueWord);
     // cout << "Salida: " << bruteForceDecipherWithClue(input, clueWord) << '\n';
     return 0;

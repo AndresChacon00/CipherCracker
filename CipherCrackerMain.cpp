@@ -8,6 +8,7 @@
 #include <thread>
 #include <future>
 #include <unordered_set>
+#include <set>
 
 #define ALPHABET_SIZE 26
 #define LETTER_TO_INT(c) (int)(c - 'a')
@@ -69,6 +70,89 @@ void printKeyMap(vector<char> &keyMap)
     {
         cout << INT_TO_LETTER(i) << ":" << keyMap[i] << "; ";
     }
+}
+
+/**
+ * Carga un diccionario (lista) de palabras en inglés
+ * @param dictionaryPath Ruta del archivo del diccionario
+ */
+set<string> loadDictionary(const string &dictionaryPath)
+{
+    set<string> dictionary;
+    ifstream file(dictionaryPath);
+    if (file.is_open())
+    {
+        string word;
+        while (getline(file, word))
+        {
+            dictionary.insert(word);
+        }
+        file.close();
+    }
+    else
+    {
+        cerr << "Error opening dictionary file: " << dictionaryPath << endl;
+    }
+    return dictionary;
+}
+
+/**
+ * Verifica que todas las palabras de `text` estén en `dictionary`
+ * @param text Texto a validar
+ * @param dictionary Diccionario cargado en memoria
+ */
+bool checkAllWordsInDictionary(const string &text, const set<string> &dictionary)
+{
+    regex wordRegex("\\b\\w+\\b"); // Matches one or more word characters
+    auto wordsBegin = sregex_iterator(text.begin(), text.end(), wordRegex);
+    auto wordsEnd = sregex_iterator();
+
+    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
+    {
+        string word = (*i).str();
+        transform(word.begin(), word.end(), word.begin(), ::tolower);
+        if (dictionary.find(word) == dictionary.end())
+        {
+            return false; // Word not found in dictionary
+        }
+    }
+    return true; // All words found
+}
+
+/**
+ * Compara los patrones de caracteres entre dos palabras, es decir, si es posible cifrar una para obtener la otra
+ * @param word1 First word
+ * @param word2 Second word
+ */
+bool matchWordsPattern(const string &word1, const string &word2)
+{
+    if (word1.size() != word2.size())
+    {
+        return false;
+    }
+
+    unordered_map<char, char> map1, map2;
+    for (size_t i = 0; i < word1.size(); ++i)
+    {
+        char c1 = word1[i];
+        char c2 = word2[i];
+
+        if (map1.find(c1) == map1.end())
+        {
+            map1[c1] = c2;
+        }
+        if (map2.find(c2) == map2.end())
+        {
+            map2[c2] = c1;
+        }
+
+        if (map1[c1] != c2 || map2[c2] != c1)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -140,6 +224,13 @@ string monoalphabeticDecipher(vector<char> &keyMap, const string &cipheredText)
  */
 string bruteForceDecipherWithClue(const string &cipheredText, const string &clueWord)
 {
+    // Load dictionary
+    set<string> dictionary = loadDictionary("english.txt");
+    if (dictionary.empty())
+    {
+        return ""; // Return empty string if dictionary loading failed
+    }
+
     // Convert to lowercase
     string lowerCipheredText = cipheredText;
     string lowerClueWord = clueWord;
@@ -154,8 +245,14 @@ string bruteForceDecipherWithClue(const string &cipheredText, const string &clue
 
     for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
     {
-        // Check that the word is not in uniqueWords
+        // Check that word has correct pattern
         string cipheredWord = (*i).str();
+        if (!matchWordsPattern(lowerClueWord, cipheredWord))
+        {
+            continue;
+        }
+
+        // Check that the word is not in uniqueWords
         if (uniqueWords.find(cipheredWord) == uniqueWords.end())
         {
             uniqueWords.insert((*i).str());
@@ -166,7 +263,6 @@ string bruteForceDecipherWithClue(const string &cipheredText, const string &clue
             {
                 alphabetCopy.erase(remove(alphabetCopy.begin(), alphabetCopy.end(), c), alphabetCopy.end());
             }
-            cout << "Alphabet: " << alphabetCopy << "; cipheredWord: " << cipheredWord << '\n';
 
             // Generate all permutations of alphabet
             vector<char> keyMap(ALPHABET_SIZE, 0);
@@ -197,9 +293,13 @@ string bruteForceDecipherWithClue(const string &cipheredText, const string &clue
                 }
 
                 // Test decipher
-                cout << monoalphabeticDecipher(keyMap, cipheredText) << " // ";
-                printKeyMap(keyMap);
-                cout << '\n';
+                string decipheredText = monoalphabeticDecipher(keyMap, cipheredText);
+                if (checkAllWordsInDictionary(decipheredText, dictionary))
+                {
+                    cout << "Texto descifrado: " << decipheredText << '\n';
+                    printKeyMap(keyMap);
+                    return decipheredText;
+                }
             } while (next_permutation(alphabetCopy.begin(), alphabetCopy.end()));
         }
     }
@@ -222,8 +322,8 @@ int main()
     // cout << "Texto cifrado: " << textoCifrado << '\n';
     // cout << "Texto descifrado: " << textoDescifrado << '\n';
 
-    string input = "VIRFW EIXYW VD UUAVW JWVDU QJAMUSW";
-    string clueWord = "BRAWLIO";
+    string input = "I LIKE PLAXING BRAWL STARS EVERX DAX";
+    string clueWord = "PLAYING";
     bruteForceDecipherWithClue(input, clueWord);
     // cout << "Salida: " << bruteForceDecipherWithClue(input, clueWord) << '\n';
     return 0;

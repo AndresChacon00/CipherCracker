@@ -4,9 +4,6 @@
 #include <regex>
 #include <vector>
 #include <algorithm>
-#include <mutex>
-#include <thread>
-#include <future>
 #include <unordered_set>
 #include <set>
 

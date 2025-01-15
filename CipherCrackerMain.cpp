@@ -420,6 +420,79 @@ unordered_set<string> extractUniqueWords(const string& cipheredText) {
 }
 
 /**
+ * Descifra una palabra utilizando la clave actual y actualiza la clave si se encuentra una coincidencia única en el diccionario
+ * @param palabraCifrada La palabra cifrada
+ * @param keyMap La clave actual
+ * @param dictionary El diccionario de palabras en inglés
+ * @return La palabra descifrada si se encuentra una coincidencia única, de lo contrario la palabra cifrada original
+ */
+string decipherWordWithKeyAndDictionary(const string& palabraCifrada, vector<char>& keyMap) {
+    set<string> dictionary = loadDictionary("english.txt");
+    // Create an inverse map of the key
+    vector<char> inverseKeyMap(keyMap.size());
+    for (int i = 0; i < keyMap.size(); i++)
+    {
+        // Example: keyMap[3] = 'a' means inverseKeyMap[0] = 'd'
+        char c = keyMap[i];
+        char letterInInverse = INT_TO_LETTER(i);
+        int posInInverse = LETTER_TO_INT(c);
+        inverseKeyMap[posInInverse] = letterInInverse;
+    }
+
+
+
+    unordered_set<string> posiblesPalabras;
+
+    // Convertir la palabra cifrada a minúsculas
+    string lowerPalabraCifrada = palabraCifrada;
+    transform(lowerPalabraCifrada.begin(), lowerPalabraCifrada.end(), lowerPalabraCifrada.begin(), ::tolower);
+
+    // Buscar posibles palabras en el diccionario
+    for (const string& palabra : dictionary) {
+        if (palabra.size() != lowerPalabraCifrada.size()) {
+            continue;
+        }
+        if (palabra == "beautiful") cout<<"BEAURIFUL";
+        bool match = true;
+        for (size_t i = 0; i < palabra.size(); ++i) {
+            char cifrado = lowerPalabraCifrada[i];
+            char descifrado = palabra[i];
+
+            char aux = inverseKeyMap[LETTER_TO_INT(cifrado)];
+            if ( isalpha(aux) && inverseKeyMap[LETTER_TO_INT(cifrado)] != descifrado) {
+                if (palabra == "beautiful") 
+                cout<<endl<<"char 1: "<< inverseKeyMap[LETTER_TO_INT(cifrado)] << " char 2: "<< descifrado<<endl;
+                match = false;
+                break;
+            }
+        }
+
+        if (match) {
+            posiblesPalabras.insert(palabra);
+        }
+    }
+    cout << "Palabra cifrada: " << palabraCifrada << " -> Posibles palabras: ";
+    for (const auto& palabra : posiblesPalabras) {
+        cout << palabra << " ";
+    }
+    cout << endl;
+    // Si solo hay una palabra candidata, actualizar la clave
+    if (posiblesPalabras.size() == 1) {
+        string palabraDescifrada = *posiblesPalabras.begin();
+        for (size_t i = 0; i < palabraDescifrada.size(); ++i) {
+            char cifrado = lowerPalabraCifrada[i];
+            char descifrado = palabraDescifrada[i];
+            keyMap[LETTER_TO_INT(cifrado)] = descifrado;
+        }
+        return palabraDescifrada;
+    }
+
+    // Si no se encuentra una coincidencia única, devolver la palabra cifrada original
+    return palabraCifrada;
+}
+
+
+/**
  * Desencriptador por análisis de frecuencia
  */
 string frecuencyDecipherWithClue(const string& input, const string& clueWord, const int& cantLetras) {
@@ -445,6 +518,23 @@ string frecuencyDecipherWithClue(const string& input, const string& clueWord, co
    // cout<<"penne";
     //Decifrar el texto con la clave generada
     string decipheredText = monoalphabeticDecipher(keyMap, input);
+    // Extraer todas las palabras únicas del texto cifrado
+    unordered_set<string> uniqueWords = extractUniqueWords(input);
+
+    // Intentar descifrar cada palabra utilizando la clave actual y el diccionario
+    //for (const string& palabraCifrada : uniqueWords) {
+    //    string palabraDescifrada = decipherWordWithKeyAndDictionary(palabraCifrada, keyMap);
+    //    cout << "Palabra cifrada: " << palabraCifrada << " -> Palabra descifrada: " << palabraDescifrada << endl;
+    //}
+
+    string palabraDescifrada = decipherWordWithKeyAndDictionary("adztshetk", keyMap);
+    cout << "Palabra cifrada: " << "adztshetk" << " -> Palabra descifrada: " << palabraDescifrada << endl;
+
+    // Decifrar el texto completo con la clave actualizada
+    decipheredText = monoalphabeticDecipher(keyMap, input);
+
+
+
     return decipheredText;
 } 
 
@@ -469,9 +559,9 @@ int main()
     bruteForceDecipherWithClue(input, clueWord);
     */
     // cout << "Salida: " << bruteForceDecipherWithClue(input, clueWord) << '\n';
-  string input = "sgd rjx hr z adztshetk aktd snczx sgd bkntcr zqd rnes zmc ekteex khjd bnssnm bzmcx h bzm gdzq sgd ahqcr rhmfhmf zmc sgd vhmc qtrskhmf sgqntfg sgd sqddr h eddk rn gzoox zmc fqzsdetk sn ad zkhud";
+      string input = "sgd rjx hr z adztshetk aktd snczx sgd bkntcr zqd rnes zmc ekteex khjd bnssnm bzmcx h bzm gdzq sgd ahqcr rhmfhmf zmc sgd vhmc qtrskhmf sgqntfg sgd sqddr h eddk rn gzoox zmc fqzsdetk sn ad zkhud";
   //  string input = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
-    string clueWord = "sky";
+    string clueWord = "beautiful";
     //vector<pair<char, int> > letrasMasFrecuentes = ordenarPorFrecuencia(contarFrecuenciaLetras(input));
     //cout << letrasMasFrecuentes[0].first << ": " << letrasMasFrecuentes[0].second << endl;
     //unordered_set<string> uniqueWords = extractUniqueWords(input);

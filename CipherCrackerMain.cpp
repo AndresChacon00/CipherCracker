@@ -586,10 +586,57 @@ string frequencyDecipherWithClueWord(const string &input, const string &clueWord
 
 int main()
 {
-    string input = "sgd rjx hr z adztshetk aktd snczx sgd bkntcr zqd rnes zmc ekteex khjd bnssnm bzmcx h bzm gdzq sgd ahqcr rhmfhmf zmc sgd vhmc qtrskhmf sgqntfg sgd sqddr h eddk rn gzoox zmc fqzsdetk sn ad zkhud";
-    //  string input = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
-    string clueWord = "beautiful";
+    cout << "=== CIPHER CRACKER ===\n\n";
+    cout << "1. Cifrar un texto\n2. Descifrar un texto\n3. Descifrar por fuerza bruta\n4. Análisis de frecuencia\nSeleccione una opción: ";
+    string num;
+    getline(cin, num);
+    cout << '\n';
 
-    string desencriptado = frequencyDecipherWithClueWord(input, clueWord);
+    if (num == "1")
+    {
+        cout << "Ingrese el texto a cifrar: ";
+        string input;
+        getline(cin, input);
+        cout << "Ingrese el nombre del archivo con la clave: ";
+        string path;
+        getline(cin, path);
+        auto keyMap = readKeyFromJSON(path);
+        string out = monoalphabeticCipher(keyMap, input);
+        cout << "\nTexto cifrado: " << out << '\n';
+    }
+    else if (num == "2")
+    {
+        cout << "Ingrese el texto a descifrar: ";
+        string input;
+        getline(cin, input);
+        cout << "Ingrese el nombre del archivo con la clave: ";
+        string path;
+        getline(cin, path);
+        auto keyMap = readKeyFromJSON(path);
+        string out = monoalphabeticDecipher(keyMap, input);
+        cout << "\nTexto descifrado: " << out << '\n';
+    }
+    else if (num == "3")
+    {
+        cout << "Ingrese el texto a descifrar: ";
+        string input;
+        getline(cin, input);
+        cout << "Ingrese la palabra pista: ";
+        string clue;
+        getline(cin, clue);
+        string out = bruteForceDecipherWithClue(input, clue);
+        cout << "\nTexto descifrado: " << out << '\n';
+    }
+    else if (num == "4")
+    {
+        cout << "Ingrese el texto a descifrar: ";
+        string input;
+        getline(cin, input);
+        cout << "Ingrese la palabra pista: ";
+        string clue;
+        getline(cin, clue);
+        string out = frequencyDecipherWithClueWord(input, clue);
+        cout << "\nTexto descifrado: " << out << '\n';
+    }
     return 0;
 }

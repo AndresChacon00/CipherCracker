@@ -18,7 +18,6 @@ const string BASE_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 const string ENGLISH_LETTER_FREQUENCY = "etaoinshrdlcumwfgypbvkjxqz";
 const unordered_set<string> COMMON_LETTER_PAIRS = {"ss", "ee", "tt", "ff", "ll", "mm", "oo"};
 
-
 /**
  * Lee la clave de encriptación a partir de un archivo JSON
  * @param f Ruta del archivo
@@ -198,7 +197,8 @@ string monoalphabeticDecipher(vector<char> &keyMap, const string &cipheredText)
         int posInInverse = LETTER_TO_INT(c);
         inverseKeyMap[posInInverse] = letterInInverse;
     }
-    cout <<endl<< "Inverse Key Map: ";
+    cout << endl
+         << "Inverse Key Map: ";
     for (int i = 0; i < inverseKeyMap.size(); i++)
     {
         cout << INT_TO_LETTER(i) << ":" << inverseKeyMap[i] << "; ";
@@ -317,11 +317,15 @@ string bruteForceDecipherWithClue(const string &cipheredText, const string &clue
 
 /**
  * Cuenta la frecuencia de letras en un texto
+ * @param texto
  */
-unordered_map<char, int> contarFrecuenciaLetras(const string& texto){
+unordered_map<char, int> contarFrecuenciaLetras(const string &texto)
+{
     unordered_map<char, int> frecuencia;
-    for (char c : texto) {
-        if (isalpha(c)) {
+    for (char c : texto)
+    {
+        if (isalpha(c))
+        {
             char lower = tolower(c);
             frecuencia[lower]++;
         }
@@ -331,17 +335,21 @@ unordered_map<char, int> contarFrecuenciaLetras(const string& texto){
 
 /**
  * Ordena las letras por frecuencia
+ * @param frecuencia Diccionario de frecuencias de cada letra
  */
- vector<pair<char, int> > ordenarPorFrecuencia(const unordered_map<char, int>& frecuencia) {
+vector<pair<char, int>> ordenarPorFrecuencia(const unordered_map<char, int> &frecuencia)
+{
     // Definir una priority_queue que ordene de mayor a menor frecuencia
-    priority_queue <pair<int, char>> pq;
-    for (const auto& entry : frecuencia) {
+    priority_queue<pair<int, char>> pq;
+    for (const auto &entry : frecuencia)
+    {
         pq.push({entry.second, entry.first});
     }
 
     // Extraer los elementos de la priority_queue en orden
     vector<pair<char, int>> frecuenciaVec;
-    while (!pq.empty()) {
+    while (!pq.empty())
+    {
         frecuenciaVec.push_back({pq.top().second, pq.top().first});
         pq.pop();
     }
@@ -351,15 +359,17 @@ unordered_map<char, int> contarFrecuenciaLetras(const string& texto){
 
 /**
  * Cuenta la frecuencia de pares de letras en un texto
- * 
+ * @param texto
  */
-set<pair<string, string>> extraerPalabrasConParesIguales(const string& texto) {
+set<pair<string, string>> extraerPalabrasConParesIguales(const string &texto)
+{
     set<pair<string, string>> palabrasConParesIguales;
     regex wordRegex("\\b\\w*([a-zA-Z])\\1\\w*\\b");
     auto wordsBegin = sregex_iterator(texto.begin(), texto.end(), wordRegex);
     auto wordsEnd = sregex_iterator();
 
-    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i) {
+    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
+    {
         string palabra = (*i).str();
         smatch match = *i;
         string par = match.str(1) + match.str(1);
@@ -369,12 +379,11 @@ set<pair<string, string>> extraerPalabrasConParesIguales(const string& texto) {
     return palabrasConParesIguales;
 }
 
-
-
 /**
  * Extrae palabras del texto que coinciden con la extructura de la pista
  */
-unordered_set<string> extractUniqueWordsMatchingClue(const string& cipheredText, const string& clueWord) {
+unordered_set<string> extractUniqueWordsMatchingClue(const string &cipheredText, const string &clueWord)
+{
     string lowerCipheredText = cipheredText;
     string lowerClueWord = clueWord;
     transform(lowerCipheredText.begin(), lowerCipheredText.end(), lowerCipheredText.begin(), ::tolower);
@@ -386,7 +395,8 @@ unordered_set<string> extractUniqueWordsMatchingClue(const string& cipheredText,
     auto wordsBegin = sregex_iterator(lowerCipheredText.begin(), lowerCipheredText.end(), wordRegex);
     auto wordsEnd = sregex_iterator();
 
-    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i) {
+    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
+    {
         string cipheredWord = (*i).str();
         if (!matchWordsPattern(lowerClueWord, cipheredWord))
         {
@@ -401,7 +411,8 @@ unordered_set<string> extractUniqueWordsMatchingClue(const string& cipheredText,
 /**
  * Extrae todas las palabras del texto
  */
-unordered_set<string> extractUniqueWords(const string& cipheredText) {
+unordered_set<string> extractUniqueWords(const string &cipheredText)
+{
     string lowerCipheredText = cipheredText;
     transform(lowerCipheredText.begin(), lowerCipheredText.end(), lowerCipheredText.begin(), ::tolower);
 
@@ -411,7 +422,8 @@ unordered_set<string> extractUniqueWords(const string& cipheredText) {
     auto wordsBegin = sregex_iterator(lowerCipheredText.begin(), lowerCipheredText.end(), wordRegex);
     auto wordsEnd = sregex_iterator();
 
-    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i) {
+    for (sregex_iterator i = wordsBegin; i != wordsEnd; ++i)
+    {
         string cipheredWord = (*i).str();
         uniqueWords.insert(cipheredWord);
     }
@@ -426,7 +438,8 @@ unordered_set<string> extractUniqueWords(const string& cipheredText) {
  * @param dictionary El diccionario de palabras en inglés
  * @return La palabra descifrada si se encuentra una coincidencia única, de lo contrario la palabra cifrada original
  */
-string decipherWordWithKeyAndDictionary(const string& palabraCifrada, vector<char>& keyMap) {
+string decipherWordWithKeyAndDictionary(const string &palabraCifrada, vector<char> &keyMap)
+{
     set<string> dictionary = loadDictionary("english.txt");
     // Create an inverse map of the key
     vector<char> inverseKeyMap(keyMap.size());
@@ -439,8 +452,6 @@ string decipherWordWithKeyAndDictionary(const string& palabraCifrada, vector<cha
         inverseKeyMap[posInInverse] = letterInInverse;
     }
 
-
-
     unordered_set<string> posiblesPalabras;
 
     // Convertir la palabra cifrada a minúsculas
@@ -448,38 +459,48 @@ string decipherWordWithKeyAndDictionary(const string& palabraCifrada, vector<cha
     transform(lowerPalabraCifrada.begin(), lowerPalabraCifrada.end(), lowerPalabraCifrada.begin(), ::tolower);
 
     // Buscar posibles palabras en el diccionario
-    for (const string& palabra : dictionary) {
-        if (palabra.size() != lowerPalabraCifrada.size()) {
+    for (const string &palabra : dictionary)
+    {
+        if (palabra.size() != lowerPalabraCifrada.size())
+        {
             continue;
         }
-        if (palabra == "beautiful") cout<<"BEAURIFUL";
+        if (palabra == "beautiful")
+            cout << "BEAURIFUL";
         bool match = true;
-        for (size_t i = 0; i < palabra.size(); ++i) {
+        for (size_t i = 0; i < palabra.size(); ++i)
+        {
             char cifrado = lowerPalabraCifrada[i];
             char descifrado = palabra[i];
 
             char aux = inverseKeyMap[LETTER_TO_INT(cifrado)];
-            if ( isalpha(aux) && inverseKeyMap[LETTER_TO_INT(cifrado)] != descifrado) {
-                if (palabra == "beautiful") 
-                cout<<endl<<"char 1: "<< inverseKeyMap[LETTER_TO_INT(cifrado)] << " char 2: "<< descifrado<<endl;
+            if (isalpha(aux) && inverseKeyMap[LETTER_TO_INT(cifrado)] != descifrado)
+            {
+                if (palabra == "beautiful")
+                    cout << endl
+                         << "char 1: " << inverseKeyMap[LETTER_TO_INT(cifrado)] << " char 2: " << descifrado << endl;
                 match = false;
                 break;
             }
         }
 
-        if (match) {
+        if (match)
+        {
             posiblesPalabras.insert(palabra);
         }
     }
     cout << "Palabra cifrada: " << palabraCifrada << " -> Posibles palabras: ";
-    for (const auto& palabra : posiblesPalabras) {
+    for (const auto &palabra : posiblesPalabras)
+    {
         cout << palabra << " ";
     }
     cout << endl;
     // Si solo hay una palabra candidata, actualizar la clave
-    if (posiblesPalabras.size() == 1) {
+    if (posiblesPalabras.size() == 1)
+    {
         string palabraDescifrada = *posiblesPalabras.begin();
-        for (size_t i = 0; i < palabraDescifrada.size(); ++i) {
+        for (size_t i = 0; i < palabraDescifrada.size(); ++i)
+        {
             char cifrado = lowerPalabraCifrada[i];
             char descifrado = palabraDescifrada[i];
             keyMap[LETTER_TO_INT(cifrado)] = descifrado;
@@ -491,38 +512,38 @@ string decipherWordWithKeyAndDictionary(const string& palabraCifrada, vector<cha
     return palabraCifrada;
 }
 
-
 /**
  * Desencriptador por análisis de frecuencia
+ * @param input Texto cifrado
+ * @param clueWord Palabra pista
+ * @param cantLetras Cantidad de letras que serán estimadas por frecuencia
  */
-string frecuencyDecipherWithClue(const string& input, const string& clueWord, const int& cantLetras) {
-    vector<pair<char, int> > letrasMasFrecuentes = ordenarPorFrecuencia(contarFrecuenciaLetras(input));
-    set<pair<string, string> > palabrasPares = extraerPalabrasConParesIguales(input);
+string frecuencyDecipherWithClue(const string &input, const string &clueWord, const int &cantLetras)
+{
+    vector<pair<char, int>> letrasMasFrecuentes = ordenarPorFrecuencia(contarFrecuenciaLetras(input));
+    set<pair<string, string>> palabrasPares = extraerPalabrasConParesIguales(input);
 
     // Inicializar clave vacía
     vector<char> keyMap(ALPHABET_SIZE, 0);
-    
+
     // Llenar la clave con las letras más frecuentes
-    for (int i = 0; i < cantLetras && i < letrasMasFrecuentes.size(); ++i) {
+    for (int i = 0; i < cantLetras && i < letrasMasFrecuentes.size(); ++i)
+    {
         keyMap[LETTER_TO_INT(ENGLISH_LETTER_FREQUENCY[i])] = letrasMasFrecuentes[i].first;
-       // cout<<"**"<<ENGLISH_LETTER_FREQUENCY[i]<<" "<<letrasMasFrecuentes[i].first<<"**";
+        // cout<<"**"<<ENGLISH_LETTER_FREQUENCY[i]<<" "<<letrasMasFrecuentes[i].first<<"**";
     }
 
     // Mostrar el keyMap generado
     printKeyMap(keyMap);
-    // Mostrar las letras más frecuentes
-    //cout << "Letras más frecuentes en el texto:" << endl;
-    //for (const auto& letra : letrasMasFrecuentes) {
-    //    cout << letra.first << ": " << letra.second << endl;
-    //}
-   // cout<<"penne";
-    //Decifrar el texto con la clave generada
+    
+    // Decifrar el texto con la clave generada
     string decipheredText = monoalphabeticDecipher(keyMap, input);
+    
     // Extraer todas las palabras únicas del texto cifrado
     unordered_set<string> uniqueWords = extractUniqueWords(input);
 
     // Intentar descifrar cada palabra utilizando la clave actual y el diccionario
-    //for (const string& palabraCifrada : uniqueWords) {
+    // for (const string& palabraCifrada : uniqueWords) {
     //    string palabraDescifrada = decipherWordWithKeyAndDictionary(palabraCifrada, keyMap);
     //    cout << "Palabra cifrada: " << palabraCifrada << " -> Palabra descifrada: " << palabraDescifrada << endl;
     //}
@@ -533,24 +554,22 @@ string frecuencyDecipherWithClue(const string& input, const string& clueWord, co
     // Decifrar el texto completo con la clave actualizada
     decipheredText = monoalphabeticDecipher(keyMap, input);
 
-
-
     return decipheredText;
-} 
+}
 
 int main()
 {
-    //auto keyMap = readKeyFromJSON("key.json");
-    // for (int i = 0; i < keyMap.size(); i++)
-    // {
-    //     cout << INT_TO_LETTER(i) << " -> " << keyMap[i] << '\n';
-    // }
+    // auto keyMap = readKeyFromJSON("key.json");
+    //  for (int i = 0; i < keyMap.size(); i++)
+    //  {
+    //      cout << INT_TO_LETTER(i) << " -> " << keyMap[i] << '\n';
+    //  }
 
     // Ejemplo de cifrado
-    //string texto = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
-    //string textoCifrado = monoalphabeticCipher(keyMap, texto);
+    // string texto = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
+    // string textoCifrado = monoalphabeticCipher(keyMap, texto);
     // string textoDescifrado = monoalphabeticDecipher(keyMap, textoCifrado);
-    //cout << "Texto cifrado: " << textoCifrado << '\n';
+    // cout << "Texto cifrado: " << textoCifrado << '\n';
     // cout << "Texto descifrado: " << textoDescifrado << '\n';
     /*
 
@@ -559,22 +578,21 @@ int main()
     bruteForceDecipherWithClue(input, clueWord);
     */
     // cout << "Salida: " << bruteForceDecipherWithClue(input, clueWord) << '\n';
-      string input = "sgd rjx hr z adztshetk aktd snczx sgd bkntcr zqd rnes zmc ekteex khjd bnssnm bzmcx h bzm gdzq sgd ahqcr rhmfhmf zmc sgd vhmc qtrskhmf sgqntfg sgd sqddr h eddk rn gzoox zmc fqzsdetk sn ad zkhud";
-  //  string input = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
+    string input = "sgd rjx hr z adztshetk aktd snczx sgd bkntcr zqd rnes zmc ekteex khjd bnssnm bzmcx h bzm gdzq sgd ahqcr rhmfhmf zmc sgd vhmc qtrskhmf sgqntfg sgd sqddr h eddk rn gzoox zmc fqzsdetk sn ad zkhud";
+    //  string input = "the sky is a beautiful blue today the clouds are soft and fluffy like cotton candy i can hear the birds singing and the wind rustling through the trees i feel so happy and grateful to be alive";
     string clueWord = "beautiful";
-    //vector<pair<char, int> > letrasMasFrecuentes = ordenarPorFrecuencia(contarFrecuenciaLetras(input));
-    //cout << letrasMasFrecuentes[0].first << ": " << letrasMasFrecuentes[0].second << endl;
-    //unordered_set<string> uniqueWords = extractUniqueWords(input);
-    //for (const auto& word : uniqueWords) {
-    //    cout << word << endl;
-    //}
-    //cout<<endl<<"ahora las palabras con pares de letras"<<endl;
-    //set<pair<string, string> > palabrasPares = extraerPalabrasConParesIguales(input);
-    //for (const auto& word : palabrasPares){
-    //    cout<< word.first<<" "<<word.second;
-    //}
+    // vector<pair<char, int> > letrasMasFrecuentes = ordenarPorFrecuencia(contarFrecuenciaLetras(input));
+    // cout << letrasMasFrecuentes[0].first << ": " << letrasMasFrecuentes[0].second << endl;
+    // unordered_set<string> uniqueWords = extractUniqueWords(input);
+    // for (const auto& word : uniqueWords) {
+    //     cout << word << endl;
+    // }
+    // cout<<endl<<"ahora las palabras con pares de letras"<<endl;
+    // set<pair<string, string> > palabrasPares = extraerPalabrasConParesIguales(input);
+    // for (const auto& word : palabrasPares){
+    //     cout<< word.first<<" "<<word.second;
+    // }
     string desencriptado = frecuencyDecipherWithClue(input, clueWord, 3);
     cout << desencriptado;
     return 0;
-
 }

@@ -16,7 +16,7 @@ using namespace std;
 
 const string BASE_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 const string ENGLISH_LETTER_FREQUENCY = "etaoinshrdlcumwfgypbvkjxqz";
-const string COMMON_TWO_LETTER_WORDS[] = {"of", "to", "in", "it", "is", "be", "as", "at", "so", "we", "he", "by", "or", "on"};
+const string COMMON_TWO_LETTER_WORDS[] = {"of", "to", "in", "it", "is", "be", "as", "at", "so", "we", "he", "by", "or", "on", "do", "if", "me", "my", "up", "an", "go", "no", "us", "am"};
 
 /**
  * Lee la clave de encriptación a partir de un archivo JSON
@@ -577,12 +577,7 @@ string frequencyDecipherWithClueWord(const string &input, const string &clueWord
             // Test decipher
             string decipheredText = monoalphabeticDecipher(keyMap, input);
             cout << "Texto descifrado: " << decipheredText << '\n';
-            if (checkAllWordsInDictionary(decipheredText, dictionary))
-            {
-                cout << "Texto descifrado: " << decipheredText << '\n';
-                printKeyMap(keyMap);
-                return decipheredText;
-            }
+            return decipheredText;
         }
     }
 
@@ -596,6 +591,5 @@ int main()
     string clueWord = "beautiful";
 
     string desencriptado = frequencyDecipherWithClueWord(input, clueWord);
-    // cout << desencriptado << '\n';
     return 0;
 }

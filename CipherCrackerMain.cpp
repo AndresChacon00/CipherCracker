@@ -577,6 +577,7 @@ string frequencyDecipherWithClueWord(const string &input, const string &clueWord
             // Test decipher
             string decipheredText = monoalphabeticDecipher(keyMap, input);
             cout << "Texto descifrado: " << decipheredText << '\n';
+            printKeyMap(keyMap);
             return decipheredText;
         }
     }
